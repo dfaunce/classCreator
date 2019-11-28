@@ -123,6 +123,7 @@ $(function() {
   	
 	//Finish
     function finish() {
+      var $data = {};
       var err = "";
       
       //Get the Class Name
@@ -143,6 +144,11 @@ $(function() {
         alert("ERROR(s): " + errors);
         return;
       }
+
+      $data.title = clsName;
+      $data.objects = $objects;
+
+      createDocs($data);
       
       
       console.log($objects);          
@@ -161,23 +167,58 @@ $(function() {
 	/* --------------------------------------------------- DOCUMENT GENERATORS -------------------------------------------------- */
 	/* ************************************************************************************************************************** */
 	//Main handler to create documents
-	function createDocs() {
-	  var $dbTable = createDBTable();
-	  var $classFile = createClassFile();
-	  var $urlHandler = createURLHandler();
+	function createDocs($data) {
+	  var $dbTable = createDBTable($data);
+	  var $classFile = createClassFile($data);
+	  var $urlHandler = createURLHandler($data);
 	}
 	
 	
 	//Generate the SQL Statement to create the SQL Table
-	function createDBTable() {
-		var arr = [];
-		
-		
+	function createDBTable($data) {
+    var arr = [];
+    var s = "   ";
+    var x = "", n = "";
+    var t = 0;
+    var t = $data.title.replace(/[^\w\s]/gi, '').replace(/\s/g, '_').toLowerCase(); 
+    arr.push(`CREATE TABLE -------.dbo.tbl_${t} (`);
+    for (var $o in $data.objects.arr) {
+      t = $o.typeID;
+      n = $o.name.toUpperCase();
+      if (t == 1 && n == "ID") {
+        arr.push(s + "ID INT NOT NULL PRIMARY KEY IDENTITY(1,1)");
+      }
+      else {
+        switch (t) {
+          case 0:
+            arr.push(s + n + " NVARCHAR(255) NULL");
+            break;
+          case 1:
+            arr.push(s + n + " INT NOT NULL DEFAULT 0");
+            break;
+          case 2:
+            arr.push(s + n + " DECIMAL(18,6) NOT NULL DEFAULT 0.0");
+            break;
+          case 3:
+            arr.push(s + n + " TINYINT NOT NULL DEFAULT 0");
+            break;
+          case 4:
+            arr.push(s + n + " DATETIME2 NOT NULL DEFAULT GETDATE()");
+            break;
+          case 5:
+          case 6:
+          case 7:
+          default:
+            arr.push(s + " --***---" + n);
+        }
+      }
+    }
+    arr.push(");");	
 		return arr;
 	}	
 	
 	//Generate the C# class file (includes all GET, GET LIST, INSERT, UPDATE, DELETE statements)
-	function createClassFile() {
+	function createClassFile($data) {
 		var arr = [];
 		
 		
