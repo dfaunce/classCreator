@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+<script src="https://code.jquery.com/jquery.min.js"></script>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<link href="styles.css" rel="stylesheet" type="text/css"/>
+<script src="app.js"></script>
+  
+  <title>C# Modules</title>
+</head>
+<body>
+  <div class="row">
+    <div class="col-md-12">      
+        <label>Class Name:</label>
+        <div class="input-group">
+          <input type="text" class="form-control" id="clsName" value="" placeholder="Class Name" />
+        </div>      
+    </div>
+    
+    <div class="col-md-12"><hr></div>
+    
+    <div class="col-md-12">
+     <button class="btn btn-info" id="btnCreateObject">Create Object</button>      
+    </div>
+  </div>
+  
+  <div class="row" id="objects-container" data-num="7">
+    <div class="object" data-hide="0" data-static="1">
+      
+      <input type="text" class="form-control object-name" placeholder="Object Name" value=""/>
+      <button class="btn btn-danger btn-xs btn-delete-object"><span class="glyphicon glyphicon-trash"></span></button>
+      <button class="btn btn-default btn-xs btn-hide-show btn-hide-object" title="Hide Table" data-hide="1"><span class="glyphicon glyphicon-eye-close"></span></button>
+      <button class="btn btn-primary btn-xs btn-hide-show btn-show-object" title="Show Table" data-hide="0"><span class="glyphicon glyphicon-eye-open"></span></button>
+      
+      <br/>
+      <table class="object-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-name" contenteditable="true"></td>
+            <td class="td-type">
+              <select class="form-control sel-record-type" data-text="">
+                <option value="0">string</option>
+                <option value="1">int</option>
+                <option value="2">double</option>
+                <option value="3">bool</option>
+                <option value="4">DateTime</option>
+                <option value="5">List&lt;string&gt;</option>
+                <option value="6">List&lt;int&gt;</option>
+                <option value="7">List&lt;double&gt;</option>
+              </select>
+            </td>
+            <td class="td-default" contenteditable="true"></td>
+            <td>
+              <button class="btn btn-danger btn-xs btn-delete-record"><span class="glyphicon glyphicon-trash"></span></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-success btn-sm btn-add-record" title="Add Record">+</button>
+      
+    </div>
+  </div>
+  
+  <br/>
+  <hr>
+  <button class="btn btn-success btn-lg" id="btn-finish">Submit</button>
+  
+ 
+  
+</body>
+</html>
+
+
+
+
+
+
+
+

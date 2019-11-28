@@ -1,0 +1,93 @@
+body {
+  margin:30px;
+}
+
+.row hr {
+  height:1px;
+}
+
+#objects-container .object:last-child {
+  display:none;
+}
+
+.object {
+  padding-bottom:20px;
+  border-bottom:1px dashed #888;
+  margin:30px;
+}
+
+.object[data-hide='0'] .object-table{
+  display:block;
+}
+.object[data-hide='1'] .object-table {
+  display:none;
+}
+
+.btn-hide-object, .btn-show-object {
+  margin-left:10px;
+}
+
+.object[data-hide='0'] .btn-hide-object,
+.object[data-hide='1'] .btn-show-object {
+  display:inline-block;
+}
+.object[data-hide='1'] .btn-hide-object,
+.object[data-hide='0'] .btn-show-object {
+  display:none;
+}
+
+
+.object-name {
+  width:200px;
+  display:inline-block;
+}
+
+.object-table {
+  margin-top:10px;
+  width:700px;
+  border-collapse:collapse;
+}
+.object-table thead tr th {
+  background-color:#000;
+  color:#fff;
+  font-weight:bold;
+  text-align:center;
+  border:1px solid #ddd;
+}
+
+
+.object-table tbody tr td {
+  padding:3px 8px;
+  border:1px solid #ddd;
+  height:30px;
+}
+
+.object-table tbody tr td:first-child {
+  width:200px;
+}
+
+.object-table tbody tr td:nth-child(2) {
+  width:180px;
+}
+.object-table tbody tr td:nth-child(3) {
+  width:100px;
+}
+
+
+
+.object-table tbody tr td:last-child,
+.object-table thead tr th:last-child {
+  background-color:#fff;
+  border:none;
+  border-left:1px solid #ddd;
+  width:60px;
+  text-align:left;
+}
+
+.object-table tbody tr:first-child td:last-child {
+  visibility:hidden;
+}
+
+.btn-add-record {
+  padding:0px 12px;
+}
