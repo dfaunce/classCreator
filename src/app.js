@@ -151,7 +151,7 @@ $(function() {
       createDocs($data);
       
       
-      console.log($objects);          
+      //console.log($objects);          
             
     }
     $finish.on("click", finish);
@@ -170,50 +170,74 @@ $(function() {
 	function createDocs($data) {
 	  var $dbTable = createDBTable($data);
 	  var $classFile = createClassFile($data);
-	  var $urlHandler = createURLHandler($data);
+    var $urlHandler = createURLHandler($data);
+    
+    var $div = $("#div-sql-area");
+    $div.empty();
+    for (var i = 0; i < $dbTable.length; i++) {
+      $div.append("<span>" + $dbTable[i] + "</span><br/>");
+    }
 	}
 	
 	
 	//Generate the SQL Statement to create the SQL Table
 	function createDBTable($data) {
+    
     var arr = [];
-    var s = "   ";
+    var s = "&nbsp;&nbsp;&nbsp;";
     var x = "", n = "";
+    var $o;
+    var $r;    
     var t = 0;
-    var t = $data.title.replace(/[^\w\s]/gi, '').replace(/\s/g, '_').toLowerCase(); 
-    arr.push(`CREATE TABLE -------.dbo.tbl_${t} (`);
-    for (var $o in $data.objects.arr) {
-      t = $o.typeID;
-      n = $o.name.toUpperCase();
-      if (t == 1 && n == "ID") {
-        arr.push(s + "ID INT NOT NULL PRIMARY KEY IDENTITY(1,1)");
-      }
-      else {
-        switch (t) {
-          case 0:
-            arr.push(s + n + " NVARCHAR(255) NULL");
-            break;
-          case 1:
-            arr.push(s + n + " INT NOT NULL DEFAULT 0");
-            break;
-          case 2:
-            arr.push(s + n + " DECIMAL(18,6) NOT NULL DEFAULT 0.0");
-            break;
-          case 3:
-            arr.push(s + n + " TINYINT NOT NULL DEFAULT 0");
-            break;
-          case 4:
-            arr.push(s + n + " DATETIME2 NOT NULL DEFAULT GETDATE()");
-            break;
-          case 5:
-          case 6:
-          case 7:
-          default:
-            arr.push(s + " --***---" + n);
+    var f = "";
+    
+    for (var i = 0; i < $data.objects.arr.length; i++) {
+      $o = $data.objects.arr[i];
+
+      //Class Name (or Object name) --- this should represent the table
+      n = $o.name.replace(/[^\w\s]/gi, '').replace(/\s/g, '_').toLowerCase();
+      arr.push(`CREATE TABLE -------.dbo.tbl_${n} (`);
+
+      for (var j = 0; j < $o.records.length; j++) {
+        $r = $o.records[j];
+        t = $r.typeID;
+        f = $r.name.toUpperCase();
+
+        if (t == 1 && f == "ID") {
+          arr.push(s + "ID INT NOT NULL PRIMARY KEY IDENTITY(1,1),");
         }
+        else {
+          switch (t) {
+            case 0:
+              arr.push(s + f + " NVARCHAR(255) NULL,");
+              break;
+            case 1:
+              arr.push(s + f + " INT NOT NULL DEFAULT 0,");
+              break;
+            case 2:
+              arr.push(s + f + " DECIMAL(18,6) NOT NULL DEFAULT 0.0,");
+              break;
+            case 3:
+              arr.push(s + f + " TINYINT NOT NULL DEFAULT 0,");
+              break;
+            case 4:
+              arr.push(s + f + " DATETIME2 NOT NULL DEFAULT GETDATE(),");
+              break;
+            case 5:
+            case 6:
+            case 7:
+            default:
+              arr.push(s + " --***---" + f + ",");
+          }
+        }
+
       }
+      var _s = arr[arr.length - 1].slice(0,-1); 
+      arr[arr.length-1] = _s;     
+      arr.push(");");
+      arr.push("");
     }
-    arr.push(");");	
+    	
 		return arr;
 	}	
 	
@@ -334,7 +358,7 @@ $(function() {
       $(".object").each(function() {
         i = getInt($(this).attr("data-num"));
         t = $.trim($(this).find(".object-name").val());
-        console.log("t: " + t);
+        //console.log("t: " + t);
         if (t.length > 0 && i > 7) {
           arr.push({id: i, txt: t});
         }
