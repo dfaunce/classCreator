@@ -13,11 +13,18 @@
 </head>
 <body>
   <div class="row">
-    <div class="col-md-12">      
+    <div class="col-md-3">   
+           
         <label>Class Name:</label>
         <div class="input-group">
           <input type="text" class="form-control" id="clsName" value="" placeholder="Class Name" />
         </div>      
+    </div>
+    <div class="col-md-9">
+      <label>Database Name:</label>
+      <div class="input-group">
+        <input type="text" class="form-control" id="dbName" placeholder="myDB" value="eContactDb" />
+      </div>
     </div>
     
     <div class="col-md-12"><hr></div>
@@ -36,17 +43,18 @@
       <button class="btn btn-primary btn-xs btn-hide-show btn-show-object" title="Show Table" data-hide="0"><span class="glyphicon glyphicon-eye-open"></span></button>
       
       <br/>
-      <table class="object-table">
+      <table class="object-table" data-rows="1">
         <thead>
           <tr>
             <th>Name</th>
             <th>Type</th>
             <th>Default</th>
+            <th>REF</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr class="object-table-record" data-row="1">
             <td class="td-name" contenteditable="true"></td>
             <td class="td-type">
               <select class="form-control sel-record-type" data-text="">
@@ -61,6 +69,12 @@
               </select>
             </td>
             <td class="td-default" contenteditable="true"></td>
+            <td>
+              <button class="btn btn-sm btn-object-ref btn-default" data-ref="0" data-class="0", data-field="0">
+                <span class="glyphicon glyphicon-unchecked"></span>
+                <span class="glyphicon glyphicon-collapse-down"></span>
+              </button>
+            </td>
             <td>
               <button class="btn btn-danger btn-xs btn-delete-record"><span class="glyphicon glyphicon-trash"></span></button>
             </td>
@@ -80,6 +94,48 @@
   <div id="div-sql-area">
     
   </div>
+
+
+
+<div class="modal fade" id="modal-assign-reference" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Assign Reference</h4>
+      </div>
+      <div class="modal-body">
+
+        <div class="alert alert-warning" role="alert" id="modal-assign-reference-error">
+          <strong>ERROR...</strong> Unable to locate the reference, please redefine it here.
+        </div>
+
+        <div id="modal-assign-reference-form">
+            <label>Select Class:</label>
+            <div class="input-group">
+              <select id="sel-select-class" class="form-control">
+                <option value="-1">--Select--</option>
+              </select>
+            </div>
+    
+            <div id="div-select-field" style="margin-top:30px;">
+                <label>Select Field:</label>
+                <div class="input-group">
+                  <select id="sel-select-field" class="form-control">
+                    <option value="-1">--Select--</option>
+                  </select>
+                </div>
+            </div>     
+        </div>        
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="btn-save-reference">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
  
   
 </body>

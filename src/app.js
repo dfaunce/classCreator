@@ -8,6 +8,7 @@ $(function() {
   var CustomObjects = function() {
     
     var $className = $("#clsName");
+    var $dbName = $("#dbName");
     var $btnObject = $("#btnCreateObject");
     var $container = $("#objects-container");
     var $finish = $("#btn-finish");
@@ -17,10 +18,18 @@ $(function() {
 	/* ************************************************************************************************************************** */
 	//Create Object
     function createObject() {
+      var className= $.trim($className.val());
+      var dbName = $.trim($dbName.val());
+      if (className == null || className.length == 0 || dbName == null || dbName.length == 0) {
+        alert("ERROR:\nPlease list a Class Name and a Database Name");
+        return;
+      }
+
       var num = getInt($container.attr("data-num"));
       num++;
       $container.attr("data-num", num);
       var $newObject = $container.find(".object:last-child").clone(true, true);
+      $newObject.find(".object-table").attr("data-rows", "1");
       $newObject.attr({"data-num": num, "data-static": "0"});
       $container.prepend($newObject);
     }
@@ -44,6 +53,10 @@ $(function() {
     function addRecord($table) {
       var $tbody = $table.children("tbody");
       var $o = $tbody.find("tr:first-child").clone(true, true);
+      var i = getInt($table.attr("data-rows"));
+      i++;
+      $table.attr("data-rows", i);
+      $o.attr("data-row", i);
       $o.find(".td-name").text("");
       $o.find(".sel-record-type").prop("selectedIndex", 0);
       $o.find(".td-default").text("");
@@ -260,7 +273,192 @@ $(function() {
 	
 	/* __________________________________________________________________________________________________________________________ */
 	/* ************************************************************************************************************************** */
-	
+  
+  /* ************************************************************************************************************************** */
+	/* ------------------------------------------------- ADD/EDIT REFERENCE MODAL ----------------------------------------------- */
+	/* ************************************************************************************************************************** */
+
+  //When the modal is hidden, reset the form
+  $("#modal-assign-reference").on("hidden.bs.modal", function() {
+    resetModal();
+  });
+
+  function resetModal($record, classID, fieldID, oc) {    
+    var $error = $("#modal-assign-reference-error");
+    if (validateRecordExists(classID, fieldID)) {
+      $error.hide();
+    }
+    else {
+      $error.show();
+      classID = -1;
+      fieldID = -1;
+    }
+
+    //Empty the select options and assign the values
+    populateSelectObjects($record, classID, fieldID);
+
+
+    var fieldID = $record.attr("data-row");
+    var classID = $record.parents(".object").attr("data-num");
+
+    //Set the 
+    $("#modal-assign-reference").attr({"data-classid":classID, "data-fieldid":fieldID});
+    
+  }
+
+  //Checks to see if the Class and specific Field exist in the form (a user may have deleted the object)
+  function validateRecordExists(classID, fieldID) {
+    if (classID == -1 && fieldID == -1) {
+      return true;
+    }
+    var result = false;
+    var $row = $(".object[data-num='" + classID + "']");
+    if ($row != null) {
+      var $field = $row.find(".object-table-record[data-row='" + fieldID + "']");
+      if ($field != null) {
+        result = true;
+      }
+      else {
+        result = false;
+      }
+    }
+    else {
+      result = false;
+    }
+    return result;
+  }
+ 
+
+  function populateSelectObjects($record, classID, fieldID) {
+
+    //If an "id" was passed, then the user wants the select box to select a specific id value.
+    //If no "id" was passed, assign the variable "x" the value of -1. This will default select the top value
+    var x = (typeof(classID) === 'undefined' || classID == null || isNaN(classID) || classID.length == 0) ? -1 : classID;
+    var y = (typeof(fieldID) === 'undefined' || fieldID == null || isNaN(fieldID) || fieldID.length == 0) ? -1 : fieldID;
+
+    var recordClassID = 0;     
+    var recordFieldID = 0;
+
+    if (typeof($record) !== 'undefined' && $record != null) {
+      recordClassID = $record.parents(".object").attr("data-num");
+      recordFieldID = $record.attr("data-row");
+    }
+
+
+
+    //Get an object of the listed Classes
+    var $objects = getClassObjects(true);
+
+    //Get the Select object
+    var $sel = $("#sel-select-class");
+    //Clear the select object and insert the first option (default option)
+    $sel.empty().append("<option value='-1'>--Select--</option>");
+
+
+    //Get the Select FIELDS object
+    var $sel2 = $("#sel-select-field");
+    //Clear the select object and insert the first option (default option)
+    $sel2.empty().append("<option value='-1'>--Select--</option>");
+
+    $sel2.attr("data-fieldID", y);
+   
+    //Create empty variables to assign Field ID/Name and Class ID/Name
+    var classID = 0, fieldID = 0;
+    var className = "", fieldName = "";
+    var d = "";
+
+    //Loop through the object and populate the class <select>, then loop through any fields the class has and populate the <select> object
+    for (var i = 0; i < $objects.length; i++) {
+      classID = $objects[i].id;
+      className = $objects[i].txt;
+      d = (recordClassID >= 0 && recordClassID == classID) ?  "disabled" : "";
+      $sel.append(`<option value='${classID}' ${d}>${className}</option>`);
+      for (var j = 0; j < $objects[i].fields.length; j++) {
+        fieldID = $objects[i].fields[j].id;
+        fieldName = $objects[i].fields[j].name;
+        $sel2.append(`<option value='${fieldID}' class='field-option' data-class='${classID}' >${fieldName}</option>`);
+      }   
+    }
+
+    $sel.val(x);
+    $sel2.val(y);
+
+    if ($sel2.find("option:selected").val() == "-1") {
+      $sel2.parents("#div-select-field").hide();
+    }
+    else {
+      $sel2.parents("#div-select-field").hide();
+    }
+
+  }
+
+  //When the button "REF" is clicked on a record, open the reference modal
+  $(document).on("click", ".btn-object-ref", function() {
+    var numObjects = $(".object").length;
+    if (numObjects <= 2) {
+      alert("ERROR:\nYou need another 'Object' to reference. Create another Object with fields and try again.");
+      return;
+    }
+    var $record = $(this).parents("tr");
+    var classID = getInt($(this).attr("data-class"));
+    var fieldID = getInt($(this).attr("data-field"));
+    resetModal($record, classID, fieldID);
+    $("#modal-assign-reference").modal("show");
+  });
+
+  $("#sel-select-class").change(function() {
+    var $o = $(this).find("option:selected");
+    var id = getInt($o.val());
+    var $div = $("#div-select-field");
+
+    if (id > 0) {
+      $(".field-option").hide();
+      $(".field-option[data-class='" + id + "']").show();
+      $div.slideDown();
+    }
+    else {
+      $div.slideUp();
+      $("#sel-select-field").val(selectedIndex)
+    }
+    
+  });
+
+
+  //Save Reference
+  function saveReference() {
+    var $modal = $("#modal-assign-reference");
+    var $selClass = $("#sel-select-class");
+    var $selField = $("#sel-select-field");
+
+    var selClass = getInt($selClass.find("option:selected").val());
+    var selField = getInt($selField.find("option:selected").val());
+
+    if (selClass <= 0 || selField <= 0) {
+      alert("ERROR:\nPlease select a 'Class' and 'Field'.");
+      return;
+    }
+    else {
+      var classID = $modal.attr("data-classid");
+      var fieldID = $modal.attr("data-fieldid");
+      var $btn = $(".object[data-num='" + classID + "']")
+                    .find(".object-table-record[data-row='" + fieldID + "']")
+                    .find(".btn-object-ref");
+
+     $btn.attr({"data-field":fieldID, "data-class":classID});
+     if (selClass > 0 && selField > 0) {
+       $btn.removeClass("btn-default").addClass("btn-warning").attr("data-ref", "1");
+     }
+     else {
+       $btn.removeClass("btn-warning").addClass("btn-default").attr("data-ref", "0");
+     }
+    }
+
+    $(".modal").modal("hide");
+  }
+  $("#btn-save-reference").on("click", saveReference);
+
+  /* __________________________________________________________________________________________________________________________ */
+	/* ************************************************************************************************************************** */
 	
 	/* ************************************************************************************************************************** */
 	/* --------------------------------------------------------- HELPERS -------------------------------------------------------- */
@@ -351,23 +549,42 @@ $(function() {
     }
            
     //Get a list of current class objects 
-    function getClassObjects() {
+    function getClassObjects(getFields) {
+      var b = (typeof(getFields) === 'undefined' || getFields == null || !getFields) ? false : getFields;
       var arr = [];
       var i = 0;
       var t = "";
+
+      var _name, _typ, _def, _ref, _rowid;
+      var $tbody;
+
       $(".object").each(function() {
         i = getInt($(this).attr("data-num"));
-        t = $.trim($(this).find(".object-name").val());
-        //console.log("t: " + t);
+        t = $.trim($(this).find(".object-name").val());        
         if (t.length > 0 && i > 7) {
-          arr.push({id: i, txt: t});
+          var fields = [];
+          if (b) {
+            $tbody = $(this).find(".object-table tbody");
+            $tbody.find("tr").each(function() {
+              var $o = $(this).find(".sel-record-type option:selected");
+              var $ref = $(this).find(".btn-object-ref");
+  
+              _rowid = getInt($(this).attr("data-row"));
+              _name = $.trim($(this).find(".td-name").text());            
+              _typ = {id: $o.val(), title: $.trim($o.text())};
+              _def = $.trim($(this).find(".td-default").text());
+              _ref = {classID: $ref.attr("data-class"), fieldID: $ref.attr("data-field")};
+              fields.push({id: _rowid, name: _name, type: _typ, default: _def, ref:_ref});
+            });
+          }
+          arr.push({id: i, txt: t, fields:fields});          
         }
       });
       
       return arr;
     }
-    	
       
+    
     
   }
 

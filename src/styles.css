@@ -91,3 +91,27 @@ body {
 .btn-add-record {
   padding:0px 12px;
 }
+
+.btn-object-ref[data-ref='0'] span.glyphicon-unchecked {
+  display:block !important;
+}
+.btn-object-ref[data-ref='0'] span.glyphicon-collapse-down {
+  display:none !important;
+}
+
+.btn-object-ref[data-ref='1'] span.glyphicon-unchecked {
+  display:none !important;
+}
+.btn-object-ref[data-ref='1'] span.glyphicon-collapse-down {
+  display:block !important;
+}
+
+
+#div-select-field {
+  display:none;
+}
+
+#modal-assign-reference-error {
+  margin-bottom:15px;
+  display:none;
+}
