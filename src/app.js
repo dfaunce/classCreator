@@ -107,6 +107,25 @@ $(function() {
       var t= "";
       var list = getClassObjects();
       var i = 0;
+
+      
+      //Set Table name
+
+      $(this).attr("data-sqltable", "");
+      var clsName = $.trim($(this).val());
+      if (clsName.length == 0) {        
+        return;
+      }
+      var err = validate(clsName);
+      if (err.length > 0) {
+        alert("ERROR(s):" + err);
+        return;
+      }
+      var tableName = $.trim($dbName.val()) + ".dbo.tbl_" + clsName.replace(/[^\w\s]/gi, '').replace(/\s/g, '_').toLowerCase();
+      $(this).attr("data-sqltable", tableName);
+
+      $(this).val(clsName);
+
       $(".sel-record-type").each(function() {
          var $sel = $(this);
          t = $.trim($sel.parents(".object").find(".object-name").val());
@@ -133,7 +152,29 @@ $(function() {
          }
       });
     });
-  	
+    
+    $(document).on("blur", ".td-name", function() {
+      var txt = $.trim($(this).text());
+      var $tr = $(this).parents("tr");
+      $tr.attr("data-sqlfield", "");
+
+      if (txt.length == 0) {
+        return;
+      }
+
+      var err = validate(txt);
+      if (err.length > 0) {
+        alert("ERROR(s):" + err);
+        return;
+      }
+
+      var t = txt.replace(/[^\w\s]/gi, '').replace(/\s/g, '_').toUpperCase();
+      $tr.attr("data-sqlfield", t);
+
+      $(this).text(txt);
+
+    });
+
 	//Finish
     function finish() {
       var $data = {};
@@ -298,11 +339,14 @@ $(function() {
     populateSelectObjects($record, classID, fieldID);
 
 
-    var fieldID = $record.attr("data-row");
-    var classID = $record.parents(".object").attr("data-num");
-
-    //Set the 
-    $("#modal-assign-reference").attr({"data-classid":classID, "data-fieldid":fieldID});
+    if (typeof($record) !== 'undefined' && $record != null && $record.length) {
+      var fieldID = $record.attr("data-row");
+      var classID = $record.parents(".object").attr("data-num");
+  
+      //Set the Class ID and Field ID for the modal (so it knows what to reference)
+      $("#modal-assign-reference").attr({"data-classid":classID, "data-fieldid":fieldID});
+    }
+   
     
   }
 
@@ -335,6 +379,8 @@ $(function() {
     //If no "id" was passed, assign the variable "x" the value of -1. This will default select the top value
     var x = (typeof(classID) === 'undefined' || classID == null || isNaN(classID) || classID.length == 0) ? -1 : classID;
     var y = (typeof(fieldID) === 'undefined' || fieldID == null || isNaN(fieldID) || fieldID.length == 0) ? -1 : fieldID;
+
+    var inEdit = (classID > 0 && fieldID > 0);
 
     var recordClassID = 0;     
     var recordFieldID = 0;
@@ -372,6 +418,15 @@ $(function() {
       classID = $objects[i].id;
       className = $objects[i].txt;
       d = (recordClassID >= 0 && recordClassID == classID) ?  "disabled" : "";
+      
+      /*if (!inEdit) {
+        
+      }
+      else {
+        d = (x >= 0 && x == classID) ? "disabled" : "";
+      }
+      */
+      
       $sel.append(`<option value='${classID}' ${d}>${className}</option>`);
       for (var j = 0; j < $objects[i].fields.length; j++) {
         fieldID = $objects[i].fields[j].id;
@@ -381,13 +436,19 @@ $(function() {
     }
 
     $sel.val(x);
-    $sel2.val(y);
+    $(".field-option").removeAttr("selected");
+    $sel2.find("option[value='" + y + "'][data-class='" + x + "']").attr("selected", "selected");
+    
 
     if ($sel2.find("option:selected").val() == "-1") {
+      console.log("hiding parent div");
       $sel2.parents("#div-select-field").hide();
     }
     else {
-      $sel2.parents("#div-select-field").hide();
+      console.log("showing parent div");
+      $sel2.parents("#div-select-field").show();
+      $(".field-option").hide();
+      $(".field-option[data-class='" + x + "']").show();
     }
 
   }
@@ -402,6 +463,7 @@ $(function() {
     var $record = $(this).parents("tr");
     var classID = getInt($(this).attr("data-class"));
     var fieldID = getInt($(this).attr("data-field"));
+
     resetModal($record, classID, fieldID);
     $("#modal-assign-reference").modal("show");
   });
@@ -444,7 +506,7 @@ $(function() {
                     .find(".object-table-record[data-row='" + fieldID + "']")
                     .find(".btn-object-ref");
 
-     $btn.attr({"data-field":fieldID, "data-class":classID});
+     $btn.attr({"data-field":selField, "data-class":selClass});
      if (selClass > 0 && selField > 0) {
        $btn.removeClass("btn-default").addClass("btn-warning").attr("data-ref", "1");
      }
@@ -545,7 +607,9 @@ $(function() {
       else if (!isNaN(str[0])) {
         return "'" + str + "' cannot begin with a number.";
       }
-      else return "";
+      else {
+        return ""
+      };
     }
            
     //Get a list of current class objects 
