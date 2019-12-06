@@ -121,7 +121,10 @@ $(function() {
         alert("ERROR(s):" + err);
         return;
       }
-      var tableName = $.trim($dbName.val()) + ".dbo.tbl_" + clsName.replace(/[^\w\s]/gi, '').replace(/\s/g, '_').toLowerCase();
+
+      t = ".dbo.tbl_" + clsName.replace(/[^\w\s]/gi, '').replace(/\s/g, '_').toLowerCase();
+
+      var tableName = $.trim($dbName.val()) + t;
       $(this).attr("data-sqltable", tableName);
 
       $(this).val(clsName);
@@ -244,6 +247,7 @@ $(function() {
     var $r;    
     var t = 0;
     var f = "";
+    var y = "";
 
     var dbName = $.trim($dbName.val());
     
@@ -252,10 +256,11 @@ $(function() {
 
       //Class Name (or Object name) --- this should represent the table
       n = $o.name.replace(/[^\w\s]/gi, '').replace(/\s/g, '_').toLowerCase();
-      x = $o.tableName.toLowerCase();
-      arr.push(`CREATE TABLE ${dbName}.dbo.${x} (`);
+      x = $o.tableName;
+      arr.push(`CREATE TABLE ${x} (`);
 
       for (var j = 0; j < $o.records.length; j++) {
+        console.log($r);
         $r = $o.records[j];
         t = $r.typeID;
         f = $r.name.toUpperCase();
@@ -264,31 +269,36 @@ $(function() {
           arr.push(s + "ID INT NOT NULL PRIMARY KEY IDENTITY(1,1),");
         }
         else {
+
+          y = "";
+          if ($r.ref.active) {
+            y = " REFERENCES " + $(".object[data-num='" + $r.ref.cls + "']").find(".object-name").attr("data-sqltable") + " (" + $(".object[data-num='" + $r.ref.cls + "']").find(".object-table-record[data-row='" + $r.ref.field + "']").attr("data-sqlfield") + ") ON DELETE CASCADE ";
+          }
+
           switch (t) {
             case 0:
-              arr.push(s + f + " NVARCHAR(255) NULL,");
+              arr.push(s + f + " NVARCHAR(255) NULL" + y + ",");
               break;
             case 1:
-              arr.push(s + f + " INT NOT NULL DEFAULT 0,");
+              arr.push(s + f + " INT NOT NULL " + ( (y.length == 0) ? "DEFAULT " + $r.def : y) + ",");
               break;
             case 2:
-              arr.push(s + f + " DECIMAL(18,6) NOT NULL DEFAULT 0.0,");
+              arr.push(s + f + " DECIMAL(18,6) NOT NULL " + ( (y.length == 0) ? "DEFAULT " + $r.def : y) + ",");
               break;
             case 3:
-              arr.push(s + f + " TINYINT NOT NULL DEFAULT 0,");
+              arr.push(s + f + " TINYINT NOT NULL  " + ( (y.length == 0) ? "DEFAULT " + $r.def : y) + ",");
               break;
             case 4:
-              arr.push(s + f + " DATETIME2 NOT NULL DEFAULT GETDATE(),");
+              arr.push(s + f + " DATETIME2 NOT NULL DEFAULT GETDATE()" + y + ",");
               break;
             case 5:
             case 6:
             case 7:
-            default:
-              arr.push(s + " --***---" + f + ",");
+            default:              
           }
         }
-
       }
+
       var _s = arr[arr.length - 1].slice(0,-1); 
       arr[arr.length-1] = _s;     
       arr.push(");");
@@ -534,6 +544,7 @@ $(function() {
       var $result = {};
       $result.err = [];
       $result.arr = [];
+
       $container.find(".object[data-static='0']").each(function() {
         var $obj = $(this);
         var $o = {};
@@ -557,7 +568,10 @@ $(function() {
           var d = $.trim($(this).find(".td-default").text());
           d = (d.length === 0) ? returnDefault(t0, t1) : d;
           
-          $records.push({name: n, typeID:t0, typeName:t1, def:d});          
+          var btn = $(this).find(".btn-object-ref");
+          var ref = {active: (btn.attr("data-ref") == "1"),  cls:btn.attr("data-class"), field:btn.attr("data-field")};
+         
+          $records.push({name: n, typeID:t0, typeName:t1, def:d, ref:ref});          
         });
         
         $o.records = $records;
