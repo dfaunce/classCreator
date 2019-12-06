@@ -244,13 +244,16 @@ $(function() {
     var $r;    
     var t = 0;
     var f = "";
+
+    var dbName = $.trim($dbName.val());
     
     for (var i = 0; i < $data.objects.arr.length; i++) {
       $o = $data.objects.arr[i];
 
       //Class Name (or Object name) --- this should represent the table
       n = $o.name.replace(/[^\w\s]/gi, '').replace(/\s/g, '_').toLowerCase();
-      arr.push(`CREATE TABLE -------.dbo.tbl_${n} (`);
+      x = $o.tableName.toLowerCase();
+      arr.push(`CREATE TABLE ${dbName}.dbo.${x} (`);
 
       for (var j = 0; j < $o.records.length; j++) {
         $r = $o.records[j];
@@ -535,6 +538,7 @@ $(function() {
         var $obj = $(this);
         var $o = {};
         $o.name = $.trim($obj.find(".object-name").val());
+        $o.tableName = $.trim($obj.find(".object-name").attr("data-sqltable"));
         $result.err.push(validate($o.name));
         
         var $records = [];
