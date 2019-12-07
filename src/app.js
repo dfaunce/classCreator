@@ -234,6 +234,12 @@ $(function() {
     for (var i = 0; i < $dbTable.length; i++) {
       $div.append("<span>" + $dbTable[i] + "</span><br/>");
     }
+
+    var $classArea = $("#div-class-area");
+    $classArea.empty();
+    for (var i= 0; i < $classFile.length; i++) {
+      $classArea.append("<span>" + $classFile[i] + "</span><br/>");
+    }
 	}
 	
 	
@@ -310,9 +316,17 @@ $(function() {
 	
 	//Generate the C# class file (includes all GET, GET LIST, INSERT, UPDATE, DELETE statements)
 	function createClassFile($data) {
-		var arr = [];
-		
-		
+    var arr = [];
+    var t = "";
+    for (var i = 0; i < $data.objects.arr.length; i++) {
+      var $o = $data.objects.arr[i];
+      arr.push(`public Class ${$o.name}`, "{");
+      for (var j = 0; j < $o.records.length; j++) {
+        t = ($o.records[j].def.length == 0) ? "\"\"" : $o.records[j].def;
+        arr.push(`public static ${$o.records[j].typeName} ${$o.records[j].name} { get; set; } = ${t};`);
+      }
+      arr.push("}", "");
+    }	
 		return arr;
 	}
 	
