@@ -217,7 +217,68 @@ $(function() {
 	/* __________________________________________________________________________________________________________________________ */
 	/* ************************************************************************************************************************** */
 	
-	
+  
+  $("#btn-test").on("click", function() {
+    $className.val("CategoryTypes");
+    $("#btnCreateObject").click();
+
+    var $obj = $(".object[data-num='8']");
+    $obj.find(".object-name").val("Categories").attr("data-sqltable", "eContactDb.dbo.tbl_categories");
+
+
+    var $tbl = $obj.find(".object-table tbody");
+    var $tr = $tbl.find("tr:first-child");
+     
+    //id
+    $tr.find(".td-name").text("id");
+    $tr.find(".sel-record-type").val("1");
+    $tr.attr("data-sqlfield", "ID");
+  
+    //title
+    $obj.find(".btn-add-record").click();
+    $tr = $tbl.find("tr:last-child");
+    $tr.find(".td-name").text("title");
+    $tr.attr("data-sqlfield", "title");
+
+    //Subcategories
+    $("#btnCreateObject").click();
+    $obj = $(".object[data-num='9']");
+    $obj.find(".object-name").val("Subcategories").attr("data-sqltable", "eContactDb.dbo.tbl_subcategories");
+
+    $tbl = $obj.find(".object-table tbody");
+    $tr = $tbl.find("tr:first-child");
+
+
+    //id
+    $tr.find(".td-name").text("id");
+    $tr.find(".sel-record-type").val("1");
+    $tr.attr("data-sqlfield", "ID");
+
+    //title
+    $obj.find(".btn-add-record").click();
+    $tr = $tbl.find("tr:last-child");
+    $tr.find(".td-name").text("title");
+    $tr.attr("data-sqlfield", "title");
+
+    //catID
+    $obj.find(".btn-add-record").click();
+    $tr = $tbl.find("tr:last-child");
+    $tr.find(".td-name").text("catID");
+    $tr.find(".sel-record-type").val("1");
+    $tr.attr("data-sqlfield", "catID");
+    $tr.find(".btn-object-ref").attr({"data-ref":"1", "data-class":"8", "data-field":"1"}).removeClass("btn-default").addClass("btn-warning");
+
+    $obj = $(".object[data-num='8']");
+    $obj.find(".object-name").focus().blur();
+    $obj.find(".btn-add-record").click();
+
+    $tr = $obj.find(".object-table tbody").find("tr:last-child");
+    $tr.find(".td-name").text("listSubcategories");
+    $tr.find(".sel-record-type").prop("selectedIndex", 9);
+
+
+  });
+
 	
 	
 	/* ************************************************************************************************************************** */
@@ -317,16 +378,43 @@ $(function() {
 	//Generate the C# class file (includes all GET, GET LIST, INSERT, UPDATE, DELETE statements)
 	function createClassFile($data) {
     var arr = [];
-    var t = "";
-    for (var i = 0; i < $data.objects.arr.length; i++) {
-      var $o = $data.objects.arr[i];
+    var $o;
+    var i = 0, j = 0;
+    var t = "", ty = "";
+
+    var spaces = "&nbsp;&nbsp;&nbsp;";
+
+    for (i = 0; i < $data.objects.arr.length; i++) {
+      $o = $data.objects.arr[i];
       arr.push(`public Class ${$o.name}`, "{");
-      for (var j = 0; j < $o.records.length; j++) {
+      for (j = 0; j < $o.records.length; j++) {
         t = ($o.records[j].def.length == 0) ? "\"\"" : $o.records[j].def;
-        arr.push(`public static ${$o.records[j].typeName} ${$o.records[j].name} { get; set; } = ${t};`);
+        ty = $o.records[j].typeName.replace("<", "&lt;").replace(">", "&gt;");
+        t = (t.indexOf("<") >= 0) ? "new " + t.replace("<", "&lt;").replace(">", "&gt;") + "()" : t;
+        arr.push(`${spaces}public static ${ty} ${$o.records[j].name} { get; set; } = ${t};`);
       }
       arr.push("}", "");
     }	
+
+    for (i = 0; i < $data.objects.arr.length; i++) {
+       $o = $data.objects.arr[i];
+       arr.push(`public static int get${$o.name.toLowerCase()}(int id)`, "{");
+       arr.push(`${spaces}int result = 0;`);
+       
+       var sqlFields = [];
+       var paramFields = [];
+       for (j = 0; j < $o.records.length; j++) {
+         sqlFields.push($o.records[j].name.toUpperCase());
+         paramFields.push("@"+$o.records[j].name.toLowerCase());
+       }
+      
+       t = `@"SELECT TOP 1 [${sqlFields.join("], [",)}] FROM ${$o.tableName} WHERE ([ID]=@id);`;
+       arr.push(`${spaces}${t}`);
+
+    }
+
+
+
 		return arr;
 	}
 	
@@ -580,6 +668,9 @@ $(function() {
           var t0 = getInt($s.val());
           var t1 = $.trim($s.text());
           var d = $.trim($(this).find(".td-default").text());
+
+          d = (t1.indexOf("<") >= 0) ? t1 : d;
+
           d = (d.length === 0) ? returnDefault(t0, t1) : d;
           
           var btn = $(this).find(".btn-object-ref");
