@@ -29,8 +29,14 @@ $(function() {
       num++;
       $container.attr("data-num", num);
       var $newObject = $container.find(".object:last-child").clone(true, true);
+
       $newObject.find(".object-table").attr("data-rows", "1");
+      $newObject.find(".sel-ai-class").attr("data-id", num);
+      $newObject.find(".sel-pk-class").attr("data-id", num);
+      
       $newObject.attr({"data-num": num, "data-static": "0"});
+      
+      
       $container.prepend($newObject);
     }
     $btnObject.on("click", createObject);
@@ -156,6 +162,29 @@ $(function() {
       });
     });
     
+
+    //When the PRIMARY KEY is selected ensure that it is the only one.
+    $(document).on("change", ".sel-pk-class", function() {
+      var x = $(this).attr("data-id");
+      $(".sel-pk-class[data-id='" + x + "']").each(function() {
+        $(this).val("0");
+      });
+      $(this).val("1");
+    });
+
+    //When an AUTO-INCREMENT is selected, ensure that the type is an INT
+    $(document).on("change", ".sel-ai-class", function() {
+      var x = $(this).parents("tr").find(".sel-record-type option:selected").val();
+      if (x !== "1") {
+        $(this).val("0");
+        alert("ERROR:\nYou can only AUTO-INCREMENT an INTEGER type");
+
+        return;
+      }
+    });
+
+
+    //When the object name is changed
     $(document).on("blur", ".td-name", function() {
       var txt = $.trim($(this).text());
       var $tr = $(this).parents("tr");
@@ -208,7 +237,7 @@ $(function() {
       createDocs($data);
       
       
-      //console.log($objects);          
+      console.log($objects);          
             
     }
     $finish.on("click", finish);
@@ -378,9 +407,9 @@ $(function() {
 	//Generate the C# class file (includes all GET, GET LIST, INSERT, UPDATE, DELETE statements)
 	function createClassFile($data) {
     var arr = [];
-    var $o;
+    var $o, $pk;
     var i = 0, j = 0;
-    var t = "", ty = "";
+    var t = "", ty = "", pkID = "";
 
     var spaces = "&nbsp;&nbsp;&nbsp;";
 
@@ -398,7 +427,20 @@ $(function() {
 
     for (i = 0; i < $data.objects.arr.length; i++) {
        $o = $data.objects.arr[i];
-       arr.push(`public static int get${$o.name.toLowerCase()}(int id)`, "{");
+      $pk = null;
+
+       for (var k = 0; k < $o.records.length; k++) {
+         if ($pk == null) {
+          $pk = ($o.records[k].primaryKey == true) ? $o.records[k] : null;
+         }
+       }
+
+       pkID = ($pk == null) ? "id" : $pk.name;
+
+      // $pk = $o.records.filter(function(obj) { return obj.primaryKey == true; });
+      // pkID = ($pk == null) ? "id" : $pk.name;
+
+       arr.push(`public static int get${$o.name.toLowerCase()}(int ${pkID})`, "{");
        arr.push(`${spaces}int result = 0;`);
        
        var sqlFields = [];
@@ -408,8 +450,11 @@ $(function() {
          paramFields.push("@"+$o.records[j].name.toLowerCase());
        }
       
-       t = `@"SELECT TOP 1 [${sqlFields.join("], [",)}] FROM ${$o.tableName} WHERE ([ID]=@id);`;
+       t = `@"SELECT TOP 1 [${sqlFields.join("], [",)}] FROM ${$o.tableName} WHERE ([${pkID.toUpperCase()}]=@${pkID});"`;
        arr.push(`${spaces}${t}`);
+
+
+       arr.push("}", "");
 
     }
 
@@ -658,7 +703,7 @@ $(function() {
         var $table = $obj.find(".object-table");
         var $tbody = $table.find("tbody");
         
-        var n = "", t0 = 0, t1 =  "", d = "";
+        var n = "", t0 = 0, t1 =  "", d = "", ai = false, pk = false;
         
         $tbody.find("tr").each(function() {
           n = $.trim($(this).find(".td-name").text());
@@ -668,6 +713,8 @@ $(function() {
           var t0 = getInt($s.val());
           var t1 = $.trim($s.text());
           var d = $.trim($(this).find(".td-default").text());
+          ai = $(this).find(".sel-ai-class option:selected").val() == "1";
+          pk = $(this).find(".sel-pk-class option:selected").val() == "1";
 
           d = (t1.indexOf("<") >= 0) ? t1 : d;
 
@@ -676,7 +723,7 @@ $(function() {
           var btn = $(this).find(".btn-object-ref");
           var ref = {active: (btn.attr("data-ref") == "1"),  cls:btn.attr("data-class"), field:btn.attr("data-field")};
          
-          $records.push({name: n, typeID:t0, typeName:t1, def:d, ref:ref});          
+          $records.push({name: n, typeID:t0, typeName:t1, def:d, ref:ref, primaryKey:pk, autoIncrement:ai});          
         });
         
         $o.records = $records;

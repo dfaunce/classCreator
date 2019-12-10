@@ -50,6 +50,8 @@
             <th>Name</th>
             <th>Type</th>
             <th>Default</th>
+            <th>Auto Inc?</th>
+            <th>Primary?</th>
             <th>REF</th>
             <th></th>
           </tr>
@@ -70,6 +72,18 @@
               </select>
             </td>
             <td class="td-default" contenteditable="true"></td>
+            <td class="td-autoincrement">
+              <select class="form-control sel-ai-class" data-id="1" data-val="0">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+              </select>
+            </td>
+            <td class="td-primarykey">
+              <select class="form-control sel-pk-class" data-id="1" data-val="0">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+              </select>
+            </td>
             <td>
               <button class="btn btn-sm btn-object-ref btn-default" data-ref="0" data-class="0", data-field="0">
                 <span class="glyphicon glyphicon-unchecked"></span>
